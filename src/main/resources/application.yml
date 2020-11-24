@@ -1,0 +1,10 @@
+app:
+  user: callboard
+  password: 456852
+  host: 172.16.30.48
+  port: 5038
+spring:
+  main:
+    banner-mode: "off"
+logging:
+  file: /home/admin2/asterisk-workspace/com.mibs.asterisk.web/log/asterisk-call.log    
