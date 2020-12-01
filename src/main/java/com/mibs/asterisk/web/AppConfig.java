@@ -25,4 +25,16 @@ public class AppConfig {
 	@Value("${app.port}")
 	private int port;
 
+	@Value("${app.db_host}")
+	private String dbHost;
+
+	@Value("${app.db_user}")
+	private String dbUser;
+
+	@Value("${app.db_password}")
+	private String dbPassword;
+
+	@Value("${app.db_name}")
+	private String dbName;
+
 }

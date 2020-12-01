@@ -3,6 +3,10 @@ app:
   password: 456852
   host: 172.16.30.48
   port: 5038
+  db_host: 172.16.30.48
+  db_user: asterisk-admin
+  db_password: Qrtp80%tvbMkt
+  db_name: asterisk_1
 spring:
   main:
     banner-mode: "off"
