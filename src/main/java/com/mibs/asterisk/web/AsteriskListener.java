@@ -12,6 +12,10 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mibs.asterisk.web.controller.CurrentQueue;
 import com.mibs.asterisk.web.controller.InitQueue;
+import com.mibs.asterisk.web.controller.QueueContents;
 import com.mibs.asterisk.web.events.AgentCalledEvent;
 import com.mibs.asterisk.web.events.AsteriskEvent;
 import com.mibs.asterisk.web.events.QueueCallerAbandonEvent;
@@ -55,7 +60,7 @@ public class AsteriskListener {
 
 //	Members:(.*?(\n))+.*?Callers:
 
-	private AppConfig conf;
+	private AppConfig config;
 
 	private String clientid;
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy");
@@ -68,20 +73,45 @@ public class AsteriskListener {
 	private Map<String, Class<? extends AsteriskEvent>> registeredEventClasses = new HashMap<>();
 	public SocketConnector connector;
 
+	private QueueContents content;
+
 	public AsteriskListener(AppConfig co) {
-		this.conf = co;
+		this.config = co;
 		registerEventClasses();
 		runListener();
 	}
 
 	@GetMapping("/init")
-	public InitQueue init() throws IOException {
+	public InitQueue init() {
 
-		// QueueContents content = getQueueContents();
+		content = new QueueContents();
 
-		doCommand("callcenter");
+		String connURL = "jdbc:mysql://" + config.getDbHost() + ":3306/" + config.getDbName()
+				+ "?useUnicode=yes&characterEncoding=UTF-8";
+		String sql = "select name from queues";
+		try (Connection connect = DriverManager.getConnection(connURL, config.getDbUser(), config.getDbPassword());
+				Statement statement = connect.createStatement();
+				ResultSet rs = statement.executeQuery(sql)) {
 
-		return new InitQueue("hello: ");
+			while (rs.next()) {
+				String queue = rs.getString("name");
+				doCommand(queue);
+				synchronized (content) {
+					try {
+						content.wait();
+
+					} catch (InterruptedException e) {
+						logger.error("Error wait is interrupted with message: " + e.getMessage());
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			logger.error("Error in getQueueContents " + e.getMessage());
+
+		}
+
+		return new InitQueue("hello: " + content);
 
 	}
 
@@ -108,6 +138,7 @@ public class AsteriskListener {
 				if (fl) {
 					Matcher m = pt.matcher(s);
 					if (m.find())
+
 						currentQueue.addMember(m.group(0));
 				}
 			}
@@ -248,8 +279,8 @@ public class AsteriskListener {
 		}
 
 		public boolean doLogin() throws IOException {
-			out.write("Action: Login\r\nActionID:12345\r\nUsername: " + conf.getUser() + "\r\nSecret: "
-					+ conf.getPassword() + "\r\n\r\n");
+			out.write("Action: Login\r\nActionID:12345\r\nUsername: " + config.getUser() + "\r\nSecret: "
+					+ config.getPassword() + "\r\n\r\n");
 			out.flush();
 
 			boolean result = false;
@@ -274,8 +305,8 @@ public class AsteriskListener {
 		public void run() {
 			while (true) {
 
-				logger.info("Autherization has been started for user: " + conf.getUser() + " and host: "
-						+ conf.getHost() + ":" + conf.getPort());
+				logger.info("Autherization has been started for user: " + config.getUser() + " and host: "
+						+ config.getHost() + ":" + config.getPort());
 
 				lock.lock();
 				try {
@@ -285,7 +316,7 @@ public class AsteriskListener {
 						connector.getSocket().close();
 					}
 
-					connector = new SocketConnector(conf.getHost(), conf.getPort());
+					connector = new SocketConnector(config.getHost(), config.getPort());
 
 					if (connector.doLogin()) {
 						logger.info("Logged in SUCCESS! Time: " + formatter.format(LocalDateTime.now()));
@@ -344,7 +375,7 @@ public class AsteriskListener {
 							if (opt.isPresent()) {
 
 								AsteriskEvent event = opt.get();
-								System.out.println(event);
+								// System.out.println(event);
 								event.execute();
 							}
 							sb = null;
@@ -358,6 +389,11 @@ public class AsteriskListener {
 								Optional<CurrentQueue> optQueue = buildCurrentQueue(qLines);
 								if (optQueue.isPresent()) {
 									System.out.println(optQueue.get());
+									synchronized (content) {
+										content.addQueueResponce(optQueue.get());
+										content.notify();
+									}
+
 								}
 								qLines.clear();
 							}
