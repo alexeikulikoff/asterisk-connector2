@@ -35,11 +35,11 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mibs.asterisk.web.controller.CurrentQueue;
-import com.mibs.asterisk.web.controller.InitQueue;
 import com.mibs.asterisk.web.controller.QueueContents;
 import com.mibs.asterisk.web.events.AgentCalledEvent;
 import com.mibs.asterisk.web.events.AsteriskEvent;
@@ -81,8 +81,9 @@ public class AsteriskListener {
 		runListener();
 	}
 
+	@CrossOrigin(origins = "*")
 	@GetMapping("/init")
-	public InitQueue init() {
+	public QueueContents init() {
 
 		content = new QueueContents();
 
@@ -111,7 +112,7 @@ public class AsteriskListener {
 
 		}
 
-		return new InitQueue("hello: " + content);
+		return content;
 
 	}
 
@@ -137,9 +138,11 @@ public class AsteriskListener {
 				}
 				if (fl) {
 					Matcher m = pt.matcher(s);
-					if (m.find())
-
+					if (m.find()) {
 						currentQueue.addMember(m.group(0));
+						currentQueue.setCallers(getCallers(lines));
+					}
+
 				}
 			}
 			return Optional.ofNullable(currentQueue);
@@ -160,6 +163,18 @@ public class AsteriskListener {
 		}
 		return Optional.empty();
 
+	}
+
+	int getCallers(List<String> lines) {
+		int rs = 0;
+		for (String ln : lines) {
+			if (ln.contains("Callers:")) {
+				break;
+			}
+			rs++;
+			;
+		}
+		return lines.size() > 0 ? lines.size() - rs - 1 : 0;
 	}
 
 	Optional<AsteriskEvent> buildEvent(StringBuilder line) {

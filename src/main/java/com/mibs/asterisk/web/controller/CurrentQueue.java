@@ -15,7 +15,6 @@ public class CurrentQueue implements Comparable<CurrentQueue> {
 	private String queue;
 	private Set<String> members;
 	private int callers;
-	private String holdTime;
 
 	public CurrentQueue(String q) {
 		queue = q;
