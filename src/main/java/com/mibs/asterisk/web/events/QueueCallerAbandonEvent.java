@@ -1,6 +1,7 @@
 package com.mibs.asterisk.web.events;
 
 import org.apache.logging.log4j.LogManager;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -33,8 +34,9 @@ public class QueueCallerAbandonEvent implements AsteriskEvent {
 	private String holdtime;
 
 	@Override
-	public void execute() {
-		// TODO Auto-generated method stub
+	public void execute(SimpMessagingTemplate template) {
+
+		template.convertAndSend("/abandon", this);
 
 	}
 

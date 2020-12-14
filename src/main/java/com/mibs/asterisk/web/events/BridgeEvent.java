@@ -1,5 +1,7 @@
 package com.mibs.asterisk.web.events;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -19,8 +21,9 @@ public class BridgeEvent implements AsteriskEvent {
 	private String customer;
 
 	@Override
-	public void execute() {
-		// TODO Auto-generated method stub
+	public void execute(SimpMessagingTemplate template) {
+
+		template.convertAndSend("/bridge", this);
 
 	}
 

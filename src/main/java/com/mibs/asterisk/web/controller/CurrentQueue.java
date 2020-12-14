@@ -13,7 +13,7 @@ import lombok.ToString;
 public class CurrentQueue implements Comparable<CurrentQueue> {
 
 	private String queue;
-	private Set<String> members;
+	private Set<Agent> members;
 	private int callers;
 
 	public CurrentQueue(String q) {
@@ -21,13 +21,13 @@ public class CurrentQueue implements Comparable<CurrentQueue> {
 		members = new TreeSet<>();
 	}
 
-	public void addMember(String m) {
+	public void addMember(Agent m) {
 		members.add(m);
 	}
 
 	public boolean isContainMember(String memberName) {
-		for (String s : members) {
-			if (s.equals(memberName))
+		for (Agent s : members) {
+			if (s.getName().equals(memberName))
 				return true;
 		}
 		return false;
