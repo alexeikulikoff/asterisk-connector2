@@ -405,12 +405,7 @@ public class AsteriskListener {
 							if (opt.isPresent()) {
 
 								AsteriskEvent event = opt.get();
-								System.out.println(event);
 								event.execute(template);
-								// QueueMemberRemovedEvent ev = new QueueMemberRemovedEvent();
-								// ev.setQueue("callcenter");
-								// ev.setMembername("Pizda");
-								// ev.execute(template);
 							}
 							sb = null;
 						}
@@ -422,7 +417,7 @@ public class AsteriskListener {
 							} else {
 								Optional<CurrentQueue> optQueue = buildCurrentQueue(qLines);
 								if (optQueue.isPresent()) {
-									System.out.println(optQueue.get());
+
 									synchronized (content) {
 										content.addQueueResponce(optQueue.get());
 										content.notify();

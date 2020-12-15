@@ -14,7 +14,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
-		config.enableSimpleBroker("/change", "/add", "/remove", "/bridge", "/call", "/abandon", "/connect");
+		config.enableSimpleBroker("/change", "/add", "/remove", "/bridge", "/call", "/abandon", "/connect", "/join",
+				"/leave");
 		config.setApplicationDestinationPrefixes("/app");
 	}
 
@@ -23,6 +24,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 		List<String> allowedOriginPatterns = new ArrayList<>();
 		allowedOriginPatterns.add("http://localhost:4800");
+		allowedOriginPatterns.add("http://172.16.30.48:4800");
 		String[] arr = allowedOriginPatterns.stream().toArray(String[]::new);
 
 		registry.addEndpoint("/socket").setAllowedOrigins(arr).withSockJS();

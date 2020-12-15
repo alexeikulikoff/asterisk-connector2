@@ -10,5 +10,7 @@ app:
 spring:
   main:
     banner-mode: "off"
+server:
+  port: 9898
 logging:
   file: /home/admin2/asterisk-workspace/com.mibs.asterisk.web/log/asterisk-call.log    
