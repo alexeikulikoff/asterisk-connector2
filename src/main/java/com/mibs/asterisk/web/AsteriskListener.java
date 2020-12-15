@@ -40,10 +40,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mibs.asterisk.web.config.Utils;
 import com.mibs.asterisk.web.controller.Agent;
 import com.mibs.asterisk.web.controller.CurrentQueue;
 import com.mibs.asterisk.web.controller.QueueContents;
 import com.mibs.asterisk.web.events.AgentCalledEvent;
+import com.mibs.asterisk.web.events.AgentConnectEvent;
 import com.mibs.asterisk.web.events.AsteriskEvent;
 import com.mibs.asterisk.web.events.QueueCallerAbandonEvent;
 import com.mibs.asterisk.web.events.QueueMemberAddedEvent;
@@ -78,6 +80,7 @@ public class AsteriskListener {
 	public AsteriskListener(AppConfig co, SimpMessagingTemplate template) {
 		this.config = co;
 		this.template = template;
+		Utils.init(this.config);
 		registerEventClasses();
 		runListener();
 	}
@@ -117,86 +120,6 @@ public class AsteriskListener {
 
 	}
 
-	private Optional<String> getAgentName(Long queueid, Long peerid) {
-		String connURL = "jdbc:mysql://" + config.getDbHost() + ":3306/" + config.getDbName()
-				+ "?useUnicode=yes&characterEncoding=UTF-8";
-		String result = null;
-		try (Connection connect = DriverManager.getConnection(connURL, config.getDbUser(), config.getDbPassword());
-				Statement statement = connect.createStatement()) {
-			String sql = "SELECT name  FROM agents ag  inner join " + " (select agentid  from members where queueid="
-					+ queueid + " and peerid=" + peerid + "  and event='ADDMEMBER' ORDER BY ID DESC LIMIT 1) mb "
-					+ " on ag.id = mb.agentid";
-
-			ResultSet rs = statement.executeQuery(sql);
-			rs.next();
-			result = rs.getString("name");
-			rs.close();
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-
-		}
-		return Optional.ofNullable(result);
-	}
-
-	private Optional<String> getAgentName(String queue, String phone) {
-
-		Optional<Long> optA = null;
-		if (phone != null && phone.length() > 0) {
-			optA = getPeerIdByName(phone);
-		} else {
-			return Optional.empty();
-		}
-		Optional<Long> optB = null;
-		if (queue != null && queue.length() > 0) {
-			optB = getQueueIdByName(queue);
-
-		} else {
-			return Optional.empty();
-		}
-		if (optA.isPresent() && optB.isPresent()) {
-			Optional<String> result = getAgentName(optB.get(), optA.get());
-			return result;
-		} else {
-			return Optional.empty();
-		}
-
-	}
-
-	private Optional<Long> getPeerIdByName(String name) {
-
-		String connURL = "jdbc:mysql://" + config.getDbHost() + ":3306/" + config.getDbName()
-				+ "?useUnicode=yes&characterEncoding=UTF-8";
-		Long result = null;
-		try (Connection connect = DriverManager.getConnection(connURL, config.getDbUser(), config.getDbPassword());
-				Statement statement = connect.createStatement()) {
-			String sql = "select id from peers where name = '" + name.toUpperCase() + "'";
-			ResultSet rs = statement.executeQuery(sql);
-			if (rs.next())
-				result = rs.getLong("id");
-			rs.close();
-		} catch (Exception e) {
-			logger.error("Error in getPeerIdByNam :" + e.getMessage());
-		}
-		return Optional.ofNullable(result);
-	}
-
-	private Optional<Long> getQueueIdByName(String name) {
-		String connURL = "jdbc:mysql://" + config.getDbHost() + ":3306/" + config.getDbName()
-				+ "?useUnicode=yes&characterEncoding=UTF-8";
-		Long result = null;
-		try (Connection connect = DriverManager.getConnection(connURL, config.getDbUser(), config.getDbPassword());
-				Statement statement = connect.createStatement()) {
-			String sql = "select id from queues where name = '" + name + "'";
-			ResultSet rs = statement.executeQuery(sql);
-			if (rs.next())
-				result = rs.getLong("id");
-			rs.close();
-		} catch (Exception e) {
-			logger.error("Error in getQueueIdByName " + e.getMessage());
-		}
-		return Optional.ofNullable(result);
-	}
-
 	private void doCommand(String queue) throws IOException {
 		connector.getPrintWriter()
 				.write("Action: COMMAND\r\nActionID:12345\r\ncommand: queue show " + queue + "\r\n\r\n");
@@ -224,7 +147,7 @@ public class AsteriskListener {
 						Agent agent = new Agent();
 						agent.setNumber(phone);
 						agent.setState("0");
-						Optional<String> optName = getAgentName(queue, phone);
+						Optional<String> optName = Utils.getAgentName(queue, phone);
 						if (optName.isPresent()) {
 							agent.setName(optName.get());
 						} else {
@@ -333,6 +256,7 @@ public class AsteriskListener {
 		registerEventClasses(QueueMemberStatusEvent.class);
 		registerEventClasses(AgentCalledEvent.class);
 		registerEventClasses(QueueCallerAbandonEvent.class);
+		registerEventClasses(AgentConnectEvent.class);
 	}
 
 	private void registerEventClasses(Class<? extends AsteriskEvent> clazz) {

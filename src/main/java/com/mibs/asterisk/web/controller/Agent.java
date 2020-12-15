@@ -12,6 +12,7 @@ public class Agent implements Comparable<Agent> {
 	private String number;
 	private String name;
 	private String state;
+	private int calls;
 
 	@Override
 	public int compareTo(Agent o) {
