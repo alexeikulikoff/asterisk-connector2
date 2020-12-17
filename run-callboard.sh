@@ -21,13 +21,14 @@
 ### END INIT INFO
 
 
+APP="web-callboard-1"
 DIR=$(/bin/pwd)
 CONF=$DIR"/src/main/resources/application.yml"
-JAR=$DIR"/build/libs/com.mibs.asterisk.web-0.0.1-SNAPSHOT.jar"
+JAR=$DIR"/build/libs/"$APP".jar"
 
-PID="/var/run/com.mibs.asterisk.web.pid"
+PID="/var/run/"$APP".pid"
 
-LOG="/var/log/com.mibs.asterisk.web.log"
+LOG="/var/log/"$APP".log"
 
 # If JAVA_HOME has not been set, try to determine it.
 if [ -z "$JAVA_HOME" ]; then

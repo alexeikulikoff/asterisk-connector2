@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
-    <property name="LOG_FILE" value="/home/admin2/asterisk-workspace/com.mibs.asterisk.web/log/app.log"/>
+    <property name="LOG_FILE" value="/var/log/web-callboard.log"/>
     <include resource="org/springframework/boot/logging/logback/file-appender.xml" />
     <root level="INFO">
         <appender-ref ref="FILE" />
