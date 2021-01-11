@@ -7,6 +7,11 @@ app:
   db_user: asterisk-admin
   db_password: Qrtp80%tvbMkt
   db_name: asterisk_1
+  redis_host: 172.16.255.10
+  redis_user: admin2
+  redis_pssword: kukla
+  redis_db: 1
+
 spring:
   main:
     banner-mode: "off"

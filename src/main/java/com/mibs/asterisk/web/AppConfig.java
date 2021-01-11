@@ -37,4 +37,16 @@ public class AppConfig {
 	@Value("${app.db_name}")
 	private String dbName;
 
+	@Value("${app.redis_host}")
+	private String redisHost;
+
+	@Value("${app.redis_user}")
+	private String redisUser;
+
+	@Value("${app.redis_pssword}")
+	private String redisPssword;
+
+	@Value("${app.redis_db}")
+	private String redisDb;
+
 }
