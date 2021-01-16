@@ -1,5 +1,12 @@
 package com.mibs.asterisk.web;
 
+/**
+ * 
+ *  Класс-контейнер для истории пациента
+ * 
+ * 
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,25 +19,25 @@ import lombok.ToString;
 @ToString
 public class PatientHistory implements java.io.Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private String phone;
-	private String name;
-	private List<String> history = new ArrayList<>();
 
-	private PatientHistory(String phone, String name) {
+	private List<MedicalResearch> medicalResearches = new ArrayList<>();
+
+	private PatientHistory(String phone) {
 		this.phone = phone;
-		this.name = name;
 	}
 
-	public static PatientHistory of(String phone, String name) {
-		return new PatientHistory(phone, name);
+	public static PatientHistory of(String phone) {
+
+		return new PatientHistory(phone);
 	}
 
-	public void addHistory(String ev) {
-		history.add(ev);
+	public PatientHistory addResearch(MedicalResearch medicalResearch) {
+
+		medicalResearches.add(medicalResearch);
+
+		return this;
 	}
 
 }
