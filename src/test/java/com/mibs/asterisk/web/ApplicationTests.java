@@ -73,6 +73,8 @@ class ApplicationTests {
 
 		byte[] rs = jedis.get(phone.getBytes());
 
+		jedis.close();
+
 		PatientHistory test = (PatientHistory) SerializationUtils.deserialize(rs);
 
 		assertEquals(phone, test.getPhone());
@@ -80,7 +82,6 @@ class ApplicationTests {
 		assertEquals(test.getMedicalResearches().get(0).getResearch().get(id1), r1);
 		assertEquals(test.getMedicalResearches().get(0).getResearch().get(id2), r2);
 		assertEquals(test.getMedicalResearches().get(0).getResearch().get(id3), r3);
-
 		assertEquals(test.getMedicalResearches().get(1).getResearch().get(id4), r4);
 		assertEquals(test.getMedicalResearches().get(1).getResearch().get(id5), r5);
 
