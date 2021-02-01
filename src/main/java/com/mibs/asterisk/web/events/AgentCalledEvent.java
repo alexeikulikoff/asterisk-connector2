@@ -48,8 +48,6 @@ public class AgentCalledEvent implements AsteriskEvent {
 	@Override
 	public void execute(SimpMessagingTemplate template) {
 		template.convertAndSend("/call", this);
-
-		System.out.println(this);
 		AsteriskListener.publish(this);
 
 	}
