@@ -20,7 +20,10 @@ repositories {
 
 dependencies {
 	
-	// https://mvnrepository.com/artifact/redis.clients/jedis
+
+	
+	compile group: 'com.rabbitmq', name: 'amqp-client', version: '5.10.0'
+	
 	compile group: 'redis.clients', name: 'jedis', version: '3.4.1'
 	
 	compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.4.0'

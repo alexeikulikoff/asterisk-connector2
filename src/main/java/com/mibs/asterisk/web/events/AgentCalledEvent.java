@@ -2,6 +2,8 @@ package com.mibs.asterisk.web.events;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import com.mibs.asterisk.web.AsteriskListener;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -46,6 +48,9 @@ public class AgentCalledEvent implements AsteriskEvent {
 	@Override
 	public void execute(SimpMessagingTemplate template) {
 		template.convertAndSend("/call", this);
+
+		System.out.println(this);
+		AsteriskListener.publish(this);
 
 	}
 

@@ -15,6 +15,7 @@ import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -26,12 +27,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.PreDestroy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,9 +55,12 @@ import com.mibs.asterisk.web.events.QueueCallerAbandonEvent;
 import com.mibs.asterisk.web.events.QueueMemberAddedEvent;
 import com.mibs.asterisk.web.events.QueueMemberRemovedEvent;
 import com.mibs.asterisk.web.events.QueueMemberStatusEvent;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConnectionFactory;
 
 import lombok.Getter;
 import lombok.Setter;
+import redis.clients.jedis.Jedis;
 
 @Getter
 @Setter
@@ -68,6 +75,8 @@ public class AsteriskListener {
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy");
 	private final Pattern pt = Pattern.compile("SIP/\\d+");
 
+	private static Channel channel;
+
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
 
@@ -76,13 +85,79 @@ public class AsteriskListener {
 	public SocketConnector connector;
 
 	private QueueContents content;
+	private static Jedis jedis;
+
+	@PreDestroy
+	public void onDestroy() throws Exception {
+
+		jedis.close();
+		System.out.println("Spring Container is destroyed!");
+	}
 
 	public AsteriskListener(AppConfig co, SimpMessagingTemplate template) {
 		this.config = co;
 		this.template = template;
 		Utils.init(this.config);
 		registerEventClasses();
+		initRabbitMQConnection();
 		runListener();
+
+		jedis = new Jedis(this.config.getRedisHost());
+		jedis.auth(this.config.getRedisPssword());
+
+	}
+
+	public static void publish(AgentCalledEvent event) {
+
+		byte[] res = jedis.get(event.getCallerIdnum().trim().getBytes());
+		if ((res != null) && (res.length > 0)) {
+
+			String queue = "SIP_" + event.getDestcallerIdnum();
+			try {
+				channel.basicPublish("", queue, null, res);
+			} catch (Exception e) {
+				logger.error("Error while publishing message to RabbitMQ queue: " + queue + " for callid: "
+						+ event.getDestcallerIdnum());
+			}
+
+		}
+	}
+
+	private void initRabbitMQConnection() {
+		ConnectionFactory factory = new ConnectionFactory();
+		factory.setHost(config.getRabbitmqHost());
+		factory.setUsername(config.getRabbitmqUsername());
+		factory.setPassword(config.getRabbitmqPassword());
+		factory.setPort(5672);
+		com.rabbitmq.client.Connection connection;
+
+		try {
+			connection = factory.newConnection();
+			channel = connection.createChannel();
+			String sql = "select name from  peers";
+			String connURL = "jdbc:mysql://" + config.getDbHost() + ":3306/" + config.getDbName()
+					+ "?useUnicode=yes&characterEncoding=UTF-8";
+			try (Connection connect = DriverManager.getConnection(connURL, config.getDbUser(), config.getDbPassword());
+					Statement statement = connect.createStatement();
+					ResultSet rs = statement.executeQuery(sql)) {
+				while (rs.next()) {
+					if ((rs.getString("name") != null) && (rs.getString("name").length() > 0)) {
+						String s = rs.getString("name").replace("/", "_");
+						try {
+							channel.queueDeclare(s, false, false, false, null);
+						} catch (IOException e) {
+							logger.error("Error declearing queue with message: " + e.getMessage());
+						}
+					}
+				}
+			} catch (SQLException e1) {
+				logger.error("Error connecting to database with message: " + e1.getMessage());
+			}
+
+		} catch (IOException | TimeoutException e) {
+
+			logger.error("Error rabbitMQ connection with message: " + e.getMessage());
+		}
 	}
 
 	@CrossOrigin(origins = "*")
@@ -288,7 +363,7 @@ public class AsteriskListener {
 
 			SocketAddress endpoint = new InetSocketAddress(ip, port);
 			socket = new Socket();
-			socket.setSoTimeout(3000);
+			// socket.setSoTimeout(3000);
 			socket.connect(endpoint, 3000);
 			socket.setKeepAlive(true);
 			out = new PrintWriter(socket.getOutputStream(), true);

@@ -49,4 +49,13 @@ public class AppConfig {
 	@Value("${app.redis_db}")
 	private String redisDb;
 
+	@Value("${app.rabbitmq_host}")
+	private String rabbitmqHost;
+
+	@Value("${app.rabbitmq_username}")
+	private String rabbitmqUsername;
+
+	@Value("${app.rabbitmq_password}")
+	private String rabbitmqPassword;
+
 }

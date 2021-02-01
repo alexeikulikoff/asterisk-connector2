@@ -1,7 +1,7 @@
 app:
   user: callboard
   password: 456852
-  host: 172.16.30.48
+  host: 172.16.30.148
   port: 5038
   db_host: 172.16.30.48
   db_user: asterisk-admin
@@ -11,7 +11,9 @@ app:
   redis_user: admin2
   redis_pssword: kukla
   redis_db: 1
-
+  rabbitmq_host: 172.16.255.10
+  rabbitmq_username: admin2
+  rabbitmq_password: kukla
 spring:
   main:
     banner-mode: "off"
