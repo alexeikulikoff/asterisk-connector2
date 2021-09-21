@@ -1,4 +1,4 @@
-package com.mibs.asterisk.web;
+package patienthistory;
 
 /**
  * 
@@ -21,7 +21,7 @@ public class PatientHistory implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private String phone;
-
+	private boolean blocked = false;
 	private List<MedicalResearch> medicalResearches = new ArrayList<>();
 
 	private PatientHistory(String phone) {

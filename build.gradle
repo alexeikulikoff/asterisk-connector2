@@ -19,9 +19,7 @@ repositories {
 }
 
 dependencies {
-	
-
-	
+		
 	compile group: 'com.rabbitmq', name: 'amqp-client', version: '5.10.0'
 	
 	compile group: 'redis.clients', name: 'jedis', version: '3.4.1'
@@ -39,8 +37,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compile files('libs/mysql-connector-java-5.1.24.jar')
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+	
+	compileOnly 'org.projectlombok:lombok:1.18.20'
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
+	
+	testCompileOnly 'org.projectlombok:lombok:1.18.20'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+	
+	
+	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

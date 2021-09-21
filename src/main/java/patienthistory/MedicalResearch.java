@@ -1,4 +1,4 @@
-package com.mibs.asterisk.web;
+package patienthistory;
 
 import java.util.HashMap;
 import java.util.Map;
